@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cavalier d'Euler</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Problème du Cavalier d'Euler</h1>
+        
+        <div class="controls">
+            <label for="board-size">Taille de l'échiquier:</label>
+            <input type="number" id="board-size" min="5" max="10" value="5">
+            
+            <label for="start-x">Position de départ X:</label>
+            <input type="number" id="start-x" min="0" value="0">
+            
+            <label for="start-y">Position de départ Y:</label>
+            <input type="number" id="start-y" min="0" value="0">
+            
+            <button id="solve-btn">Résoudre</button>
+            <button id="reset-btn">Réinitialiser</button>
+        </div>
+        
+        <div id="board-container">
+            <!-- Le plateau sera généré ici -->
+        </div>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        document.getElementById('solve-btn').addEventListener('click', async () => {
+            const size = parseInt(document.getElementById('board-size').value);
+            const startX = parseInt(document.getElementById('start-x').value);
+            const startY = parseInt(document.getElementById('start-y').value);
+            
+            if (startX >= size || startY >= size || startX < 0 || startY < 0) {
+                document.getElementById('status').textContent = 'Position de départ invalide!';
+                return;
+            }
+            
+            document.getElementById('status').textContent = 'Calcul en cours...';
+            
+            try {
+                const response = await fetch('/solve', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ size, startX, startY })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displaySolution(result.solution);
+                    document.getElementById('status').textContent = `Solution trouvée en ${result.time.toFixed(2)} secondes`;
+                } else {
+                    document.getElementById('status').textContent = 'Aucune solution trouvée!';
+                }
+            } catch (error) {
+                document.getElementById('status').textContent = 'Erreur lors du calcul';
+                console.error(error);
+            }
+        });
+        
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            const size = parseInt(document.getElementById('board-size').value);
+            createBoard(size);
+            document.getElementById('status').textContent = '';
+        });
+        
+        function createBoard(size) {
+            const boardContainer = document.getElementById('board-container');
+            boardContainer.innerHTML = '';
+            boardContainer.style.gridTemplateColumns = `repeat(${size}, 60px)`;
+            
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.textContent = '';
+                    boardContainer.appendChild(cell);
+                }
+            }
+        }
+        
+        function displaySolution(solution) {
+            const cells = document.querySelectorAll('.cell');
+            const size = parseInt(document.getElementById('board-size').value);
+            
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('visited', 'current');
+            });
+            
+            let delay = 0;
+            solution.forEach((move, index) => {
+                const [x, y] = move;
+                const cell = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+                
+                setTimeout(() => {
+                    cell.textContent = index + 1;
+                    cell.classList.add('visited');
+                    
+                    // Mettre en évidence la position actuelle
+                    cells.forEach(c => c.classList.remove('current'));
+                    cell.classList.add('current');
+                }, delay);
+                
+                delay += 300;
+            });
+        }
+        
+        // Initialisation
+        document.getElementById('board-size').addEventListener('change', function() {
+            const size = parseInt(this.value);
+            createBoard(size);
+            document.getElementById('start-x').max = size - 1;
+            document.getElementById('start-y').max = size - 1;
+        });
+        
+        createBoard(5);
+    </script>
+</body>
+</html>
