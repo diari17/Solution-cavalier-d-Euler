@@ -7,7 +7,7 @@ Solution algorithmique du problème du parcours du cavalier utilisant le backtra
 
 ## Principe Mathématique 🧮
 Le problème consiste à trouver une séquence de mouvements d'un cavalier sur un échiquier de taille N×N telle que :
-- Chaque case est visitée exactement une fois
+- Chaque case soit visitée exactement une fois
 - Les déplacements suivent les règles du jeu d'échecs (en L)
 - Solution utilisant l'algorithme de **backtracking** avec heuristique
 
